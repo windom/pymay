@@ -1,5 +1,6 @@
 from utils import PrettyPrinter
 
+
 class Expression:
     def __str__(self):
         pp = PrettyPrinter()
@@ -10,7 +11,7 @@ class Expression:
 class Variable(Expression):
     def __init__(self, name):
         self.name = name
-    
+
     def prettyPrint(self, pp, **args):
         pp += self.name
 
@@ -19,7 +20,7 @@ class Abstraction(Expression):
     def __init__(self, variables, body):
         self.variables = variables
         self.body = body
-        
+
     def prettyPrint(self, pp, **args):
         pp += "(\\"
         pp.join(self.variables)
@@ -27,12 +28,12 @@ class Abstraction(Expression):
         pp += self.body
         pp += ")"
 
-        
+
 class Application(Expression):
     def __init__(self, left, right):
         self.left = left
         self.right = right
-        
+
     def prettyPrint(self, pp, parens=False, **args):
         if parens:
             pp += "("
@@ -48,7 +49,7 @@ class Definition:
         self.variable = variable
         self.parameters = parameters
         self.body = body
-        
+
     def prettyPrint(self, pp, **args):
         pp.join([self.variable] + self.parameters)
         pp += " = "
@@ -59,7 +60,7 @@ class LetExpression(Expression):
     def __init__(self, definitions, expression):
         self.definitions = definitions
         self.expression = expression
-    
+
     def prettyPrint(self, pp, **args):
         pp.addTab()
         pp += "let "
@@ -74,4 +75,3 @@ class LetExpression(Expression):
         pp += "in  "
         pp += self.expression
         pp.delTab()
-

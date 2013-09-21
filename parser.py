@@ -21,7 +21,7 @@ expression = Forward()
 
 abstraction = (LMB + Group(OneOrMore(variable)) + ABSTR + expression) \
         .addParseAction(lambda s, loc, toks: Abstraction(list(toks[0]), toks[1]))
-        
+
 atom = variable | abstraction | (LPAR + expression + RPAR)
 
 smpexpression = OneOrMore(atom).addParseAction(lambda s, loc, toks: makeApplications(toks))
