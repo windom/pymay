@@ -22,6 +22,12 @@ class Variable(Expression):
     def freeVariables(self):
         return {self}
 
+    def substitute(self, variable, expression):
+        if self == variable:
+            return expression
+        else:
+            return self
+
     def prettyPrint(self, pp, **args):
         pp += self.name
 
@@ -40,6 +46,15 @@ class Abstraction(Expression):
 
     def freeVariables(self):
         return self.body.freeVariables() - set(self.variables)
+
+    def substitute(self, variable, expression):
+        if not variable in self.variables:
+            # Here we cold do a freshness check
+            # (http://en.wikipedia.org/wiki/Lambda_calculus
+            #             #Capture-avoiding_substitutions),
+            # but hopefully it's assured elsewhere that this will not happen
+            self.body = self.body.substitute(variable, expression)
+        return self
 
     def curry(self):
         curried = self.body
@@ -69,6 +84,11 @@ class Application(Expression):
         return self.left.freeVariables().union(
             self.right.freeVariables()
         )
+
+    def substitute(self, variable, expression):
+        self.left = self.left.substitute(variable, expression)
+        self.right = self.right.substitute(variable, expression)
+        return self
 
     def prettyPrint(self, pp, parens=False, **args):
         if parens:
