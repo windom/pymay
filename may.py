@@ -2,7 +2,8 @@ from parser import parse
 
 
 exp = parse("""
-            let x = (\\x -> x) x, x = y in (\\x -> x)  y x
+            \\x y z -> y z x
             """)
 exp = exp.identifyVars()
 print(exp)
+print(exp.curry())

@@ -20,7 +20,7 @@ class Variable(Expression):
         return context.get(self)
 
     def prettyPrint(self, pp, **args):
-        pp += (self.name + str(hash(self) % 100))
+        pp += self.name
 
 
 class Abstraction(Expression):
@@ -34,6 +34,12 @@ class Abstraction(Expression):
             lambda: self.body.identifyVariables(context)
         )
         return self
+
+    def curry(self):
+        curried = self.body
+        for variable in self.variables:
+            curried = Abstraction([variable], curried)
+        return curried
 
     def prettyPrint(self, pp, **args):
         pp += "(\\"
