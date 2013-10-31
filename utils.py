@@ -13,10 +13,11 @@ class PrettyPrinter:
         return self
 
     def join(self, lst, delimiter=" "):
-        if lst:
-            self += lst[0]
-        for s in lst[1:]:
-            self += delimiter
+        first = True
+        for s in lst:
+            if not first:
+                self += delimiter
+            first = False
             self += s
 
     def newLine(self):
