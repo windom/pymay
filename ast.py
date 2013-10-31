@@ -19,6 +19,9 @@ class Variable(Expression):
     def identifyVariables(self, context):
         return context.get(self)
 
+    def freeVariables(self):
+        return {self}
+
     def prettyPrint(self, pp, **args):
         pp += self.name
 
@@ -34,6 +37,9 @@ class Abstraction(Expression):
             lambda: self.body.identifyVariables(context)
         )
         return self
+
+    def freeVariables(self):
+        return self.body.freeVariables() - set(self.variables)
 
     def curry(self):
         curried = self.body
@@ -59,6 +65,11 @@ class Application(Expression):
         self.right = self.right.identifyVariables(context)
         return self
 
+    def freeVariables(self):
+        return self.left.freeVariables().union(
+            self.right.freeVariables()
+        )
+
     def prettyPrint(self, pp, parens=False, **args):
         if parens:
             pp += "("
@@ -83,6 +94,10 @@ class Definition:
         )
         return self
 
+    def freeVariables(self):
+        return (self.body.freeVariables() - set(self.parameters)) - {
+            self.variable}
+
     def prettyPrint(self, pp, **args):
         pp.join([self.variable] + self.parameters)
         pp += " = "
@@ -95,14 +110,22 @@ class LetExpression(Expression):
         self.expression = expression
 
     def identifyVariables(self, context):
-        self.definitions = [
+        self.definitions = list([
             definition.identifyVariables(context)
             for definition in self.definitions
-        ]
+        ])
         self.expression = self.expression.identifyVariables(context)
         for definition in self.definitions:
             context.close(definition.variable)
         return self
+
+    def freeVariables(self):
+        boundVars = set()
+        freeVars = set()
+        for definition in self.definitions:
+            freeVars = freeVars.union(definition.freeVariables() - boundVars)
+            boundVars = boundVars.union({definition.variable})
+        return freeVars.union(self.expression.freeVariables() - boundVars)
 
     def prettyPrint(self, pp, **args):
         pp.addTab()
