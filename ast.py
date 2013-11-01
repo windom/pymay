@@ -28,6 +28,9 @@ class Variable(Expression):
         else:
             return self
 
+    def desugar(self):
+        return self
+
     def prettyPrint(self, pp, **args):
         pp += self.name
 
@@ -67,6 +70,9 @@ class Abstraction(Expression):
             curried = Abstraction([variable], curried)
         return curried
 
+    def desugar(self):
+        return self.curry(self.body.desugar())
+
     def prettyPrint(self, pp, **args):
         pp += "(\\"
         pp.join(self.variables)
@@ -97,6 +103,11 @@ class Application(Expression):
             self.right.substitute(variable, expression)
         )
 
+    def desugar(self):
+        return Application(
+            self.left.desugar(),
+            self.right.desugar())
+
     def prettyPrint(self, pp, parens=False, **args):
         if parens:
             pp += "("
@@ -125,6 +136,13 @@ class Definition:
         return (self.body.freeVariables() - set(self.parameters)) - {
             self.variable}
 
+    def eliminateParameters(self):
+        if self.parameters:
+            newBody = Abstraction(self.parameters, self.body)
+            return Definition(self.variable, [], newBody)
+        else:
+            return self
+
     def prettyPrint(self, pp, **args):
         pp.join([self.variable] + self.parameters)
         pp += " = "
@@ -152,6 +170,13 @@ class LetExpression(Expression):
             freeVars = freeVars.union(definition.freeVariables() - boundVars)
             boundVars = boundVars.union({definition.variable})
         return freeVars.union(self.expression.freeVariables() - boundVars)
+
+    def desugar(self):
+        newDefinitions = []
+        for definition in self.definitions:
+            newDefinitions.append(definition.eliminateParameters())
+        newExpression = self.expression.desugar()
+        return LetExpression(newDefinitions, newExpression)
 
     def prettyPrint(self, pp, **args):
         pp.addTab()
