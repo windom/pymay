@@ -38,11 +38,11 @@ class Abstraction(Expression):
         self.body = body
 
     def identifyVariables(self, context):
-        (self.variables, self.body) = context.using(
+        (newVariables, newBody) = context.using(
             self.variables,
             lambda: self.body.identifyVariables(context)
         )
-        return self
+        return Abstraction(newVariables, newBody)
 
     def freeVariables(self):
         return self.body.freeVariables() - set(self.variables)
@@ -53,11 +53,16 @@ class Abstraction(Expression):
             # (http://en.wikipedia.org/wiki/Lambda_calculus
             #             #Capture-avoiding_substitutions),
             # but hopefully it's assured elsewhere that this will not happen
-            self.body = self.body.substitute(variable, expression)
-        return self
+            return Abstraction(self.variables, 
+                self.body.substitute(variable, expression))
+        else:
+            return self
 
-    def curry(self):
-        curried = self.body
+    def curry(self, newBody=None):
+        if newBody:
+            curried = newBody
+        else:
+            curried = self.body
         for variable in self.variables:
             curried = Abstraction([variable], curried)
         return curried
@@ -76,9 +81,10 @@ class Application(Expression):
         self.right = right
 
     def identifyVariables(self, context):
-        self.left = self.left.identifyVariables(context)
-        self.right = self.right.identifyVariables(context)
-        return self
+        return Application(
+            self.left.identifyVariables(context),
+            self.right.identifyVariables(context)
+        )
 
     def freeVariables(self):
         return self.left.freeVariables().union(
@@ -86,9 +92,10 @@ class Application(Expression):
         )
 
     def substitute(self, variable, expression):
-        self.left = self.left.substitute(variable, expression)
-        self.right = self.right.substitute(variable, expression)
-        return self
+        return Application(
+            self.left.substitute(variable, expression),
+            self.right.substitute(variable, expression)
+        )
 
     def prettyPrint(self, pp, parens=False, **args):
         if parens:
@@ -107,12 +114,12 @@ class Definition:
         self.body = body
 
     def identifyVariables(self, context):
-        self.variable = context.new(self.variable)
-        (self.parameters, self.body) = context.using(
+        newVariable = context.new(self.variable)
+        (newParameters, newBody) = context.using(
             self.parameters,
             lambda: self.body.identifyVariables(context)
         )
-        return self
+        return Definition(newVariable, newParameters, newBody)
 
     def freeVariables(self):
         return (self.body.freeVariables() - set(self.parameters)) - {
@@ -130,14 +137,13 @@ class LetExpression(Expression):
         self.expression = expression
 
     def identifyVariables(self, context):
-        self.definitions = list([
-            definition.identifyVariables(context)
-            for definition in self.definitions
-        ])
-        self.expression = self.expression.identifyVariables(context)
+        newDefinitions = []
         for definition in self.definitions:
+            newDefinitions.append(definition.identifyVariables(context))
+        newExpression = self.expression.identifyVariables(context)
+        for definition in newDefinitions:
             context.close(definition.variable)
-        return self
+        return LetExpression(newDefinitions, newExpression)
 
     def freeVariables(self):
         boundVars = set()
