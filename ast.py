@@ -56,7 +56,8 @@ class Abstraction(Expression):
             # (http://en.wikipedia.org/wiki/Lambda_calculus
             #             #Capture-avoiding_substitutions),
             # but hopefully it's assured elsewhere that this will not happen
-            return Abstraction(self.variables, 
+            return Abstraction(
+                self.variables,
                 self.body.substitute(variable, expression))
         else:
             return self
