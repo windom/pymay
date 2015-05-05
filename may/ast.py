@@ -1,5 +1,5 @@
 from collections import defaultdict
-from utils import PrettyPrinter
+from .utils import PrettyPrinter
 
 
 class Expression:

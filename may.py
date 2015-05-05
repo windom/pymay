@@ -1,4 +1,4 @@
-from parser import parse
+from may.parser import parse
 
 
 exp = parse("""

@@ -1,7 +1,7 @@
 from pyparsing import \
     Forward, Word, alphas, Suppress, OneOrMore, Group, \
     ZeroOrMore, Keyword, delimitedList, MatchFirst, ParserElement
-from ast import Variable, Abstraction, Application, Definition, LetExpression
+from .ast import Variable, Abstraction, Application, Definition, LetExpression
 
 
 def SuppressedKeyword(literal):
